@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import './Login.css';
 import { loginService } from './services/authService';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,7 +16,7 @@ const Login = () => {
     try {
       const data = await loginService(email, password);
       console.log('Login successful:', data);
-      // Aquí puedes manejar el éxito del login, como redirigir al usuario
+      navigate('/dashboard'); // Redirigir al usuario al dashboard
     } catch {
       setError('Invalid email or password');
     }

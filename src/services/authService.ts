@@ -12,7 +12,9 @@ export const loginService = async (email: string, password: string) => {
       throw new Error('Login failed');
     }
 
-    return await response.json();
+    const data = await response.json();
+    localStorage.setItem('access_token', data.access_token); // Guardar el token en localStorage
+    return data;
   } catch {
     throw new Error('Invalid email or password');
   }
