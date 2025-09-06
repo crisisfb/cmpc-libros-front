@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from './services/axiosInstance';
+import { bookService } from './services/bookService';
 import './App.css';
 
 const CreateBook = () => {
@@ -26,29 +26,20 @@ const CreateBook = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post('http://localhost:3000/books', {
+      await bookService.createBook({
         ...formData,
         price: parseFloat(formData.price),
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-        },
       });
-
-      if (response.status === 200) {
-        alert('Libro creado exitosamente');
-        setFormData({
-          title: '',
-          author: '',
-          publisher: '',
-          price: '',
-          availability: 0, // Reiniciar a valor numérico
-          genre: '',
-        });
-      } else {
-        alert('Error al crear el libro');
-      }
+      
+      alert('Libro creado exitosamente');
+      setFormData({
+        title: '',
+        author: '',
+        publisher: '',
+        price: '',
+        availability: 0,
+        genre: '',
+      });
     } catch (error) {
       console.error('Error:', error);
       alert('Error al conectar con el servidor');

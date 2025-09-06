@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
-import MUIDataTable from 'mui-datatables';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridPaginationModel, GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
-import axiosInstance from './services/axiosInstance';
+import { bookService } from './services/bookService';
+import type { Book } from './types/Book';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [books, setBooks] = useState([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [page, setPage] = useState(0);
   const [count, setCount] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -15,14 +18,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await axiosInstance.get(`http://localhost:3000/books?page=${page + 1}&limit=${rowsPerPage}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          },
-        });
-
-        setBooks(response.data.rows); // Ajustar para usar la clave correcta 'rows'
-        setCount(response.data.count);
+        const response = await bookService.getBooks(page, rowsPerPage);
+        setBooks(response.rows);
+        setCount(response.count);
       } catch (error) {
         console.error('Error fetching books:', error);
       }
@@ -31,49 +29,64 @@ const Dashboard = () => {
     fetchBooks();
   }, [page, rowsPerPage]);
 
-  const columns = [
-    { name: 'title', label: 'Título', options: { filter: true, filterType: "textField" } },
-    { name: 'author', label: 'Autor' },
-    { name: 'publisher', label: 'Editorial' },
-    { name: 'price', label: 'Precio' },
-    { name: 'availability', label: 'Disponibilidad' },
-    { name: 'genre', label: 'Género' },
-  ];
 
-  const options = {
-    filter: true,
-    filterType: 'checkbox',
-    responsive: '',
-    serverSide: true,
-    count: count,
-    page: page,
-    rowsPerPage: rowsPerPage,
-    onTableChange: (action: string, tableState: { page: number; rowsPerPage: number }) => {
-      if (action === 'changePage') {
-        setPage(tableState.page);
-      } else if (action === 'changeRowsPerPage') {
-        setRowsPerPage(tableState.rowsPerPage);
-      }
-    },
-  };
+  const columns: GridColDef[] = [
+    { field: 'title', headerName: 'Título', flex: 1 },
+    { field: 'author', headerName: 'Autor', flex: 1 },
+    { field: 'publisher', headerName: 'Editorial', flex: 1 },
+    { field: 'price', headerName: 'Precio', flex: 1, type: 'number' },
+    { field: 'availability', headerName: 'Disponibilidad', flex: 1 , type: 'number'},
+    { field: 'genre', headerName: 'Género', flex: 1 },
+  ];
 
   return (
     <ThemeProvider theme={createTheme()}>
       <div style={{ padding: '20px' }}>
         <h1>Dashboard</h1>
-        <button
-          onClick={() => navigate('/create-book')}
-          style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#007BFF', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          Crear Libro
-        </button>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button
+            onClick={() => navigate('/create-book')}
+            style={{ padding: '10px', backgroundColor: '#007BFF', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Crear Libro
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const blob = await bookService.exportToCsv();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'libros.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Error al exportar los datos');
+              }
+            }}
+            style={{ padding: '10px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Exportar CSV
+          </button>
+        </div>
 
-        <MUIDataTable
-          title={'Lista de Libros'}
-          data={books}
-          columns={columns}
-          options={options}
-        />
+        <div style={{ height: 400, width: '100%' }}>
+          <DataGrid
+            rows={books}
+            columns={columns}
+            pageSizeOptions={[rowsPerPage]}
+            rowCount={count}
+            pagination
+            paginationMode="server"
+            onPaginationModelChange={(paginationModel: GridPaginationModel) => {
+              setPage(paginationModel.page);
+              setRowsPerPage(paginationModel.pageSize);
+            }}
+          />
+        </div>
       </div>
     </ThemeProvider>
   );
