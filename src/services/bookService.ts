@@ -18,6 +18,11 @@ export const bookService = {
     return response.data;
   },
 
+  async updateBook(id: number, book: CreateBookDTO): Promise<Book> {
+    const response = await axiosInstance.put(`${API_BASE_URL}${API_ENDPOINTS.books}/${id}`, book);
+    return response.data;
+  },
+
   async exportToCsv(): Promise<Blob> {
     const response = await axiosInstance.get(`${API_BASE_URL}${API_ENDPOINTS.books}/export/csv`, {
       responseType: 'blob'

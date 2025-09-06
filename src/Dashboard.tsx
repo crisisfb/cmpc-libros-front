@@ -5,7 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
 import SearchIcon from '@mui/icons-material/Search';
+import EditIcon from '@mui/icons-material/Edit';
 import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
 import { bookService } from './services/bookService';
 import type { Book } from './types/Book';
 
@@ -41,17 +43,27 @@ const Dashboard = () => {
     {
       field: 'actions',
       headerName: 'Acciones',
-      width: 100,
+      width: 120,
       sortable: false,
       renderCell: (params) => (
-        <IconButton
-          onClick={() => navigate(`/book/${params.row.id}`)}
-          color="primary"
-          size="small"
-          title="Ver detalles"
-        >
-          <SearchIcon />
-        </IconButton>
+        <Stack direction="row" spacing={1}>
+          <IconButton
+            onClick={() => navigate(`/book/${params.row.id}`)}
+            color="primary"
+            size="small"
+            title="Ver detalles"
+          >
+            <SearchIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => navigate(`/edit-book/${params.row.id}`)}
+            color="primary"
+            size="small"
+            title="Editar libro"
+          >
+            <EditIcon />
+          </IconButton>
+        </Stack>
       ),
     },
   ];
