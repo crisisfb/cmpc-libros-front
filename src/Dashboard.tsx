@@ -32,7 +32,7 @@ const Dashboard = () => {
   }, [page, rowsPerPage]);
 
   const columns = [
-    { name: 'title', label: 'Título' },
+    { name: 'title', label: 'Título', options: { filter: true, filterType: "textField" } },
     { name: 'author', label: 'Autor' },
     { name: 'publisher', label: 'Editorial' },
     { name: 'price', label: 'Precio' },
@@ -42,8 +42,8 @@ const Dashboard = () => {
 
   const options = {
     filter: true,
-    filterType: 'dropdown',
-    responsive: 'standard',
+    filterType: 'checkbox',
+    responsive: '',
     serverSide: true,
     count: count,
     page: page,
@@ -67,6 +67,7 @@ const Dashboard = () => {
         >
           Crear Libro
         </button>
+
         <MUIDataTable
           title={'Lista de Libros'}
           data={books}

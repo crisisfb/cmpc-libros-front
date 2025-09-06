@@ -9,7 +9,7 @@ export const loginService = async (email: string, password: string) => {
 
     localStorage.setItem('access_token', response.data.access_token); // Guardar el token en localStorage
     if (response.data.refresh_token) {
-      localStorage.setItem('refresh_token', response.data.refresh_token);
+      localStorage.setItem('refresh_token', response.data.refresh_token); // Guardar el refresh token si está disponible
     }
     return response.data;
   } catch {

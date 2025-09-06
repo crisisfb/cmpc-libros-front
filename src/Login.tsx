@@ -49,7 +49,7 @@ const Login = () => {
               required
             />
           </div>
-          <button type="submit">Login</button>
+          <button type="submit" className="button">Login</button>
         </form>
       </div>
     </div>
