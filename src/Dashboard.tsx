@@ -4,6 +4,8 @@ import type { GridPaginationModel, GridColDef } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
+import SearchIcon from '@mui/icons-material/Search';
+import IconButton from '@mui/material/IconButton';
 import { bookService } from './services/bookService';
 import type { Book } from './types/Book';
 
@@ -32,11 +34,26 @@ const Dashboard = () => {
 
   const columns: GridColDef[] = [
     { field: 'title', headerName: 'Título', flex: 1 },
-    { field: 'author', headerName: 'Autor', flex: 1 },
-    { field: 'publisher', headerName: 'Editorial', flex: 1 },
-    { field: 'price', headerName: 'Precio', flex: 1, type: 'number' },
-    { field: 'availability', headerName: 'Disponibilidad', flex: 1 , type: 'number'},
     { field: 'genre', headerName: 'Género', flex: 1 },
+    { field: 'publisher', headerName: 'Editorial', flex: 1 },
+    { field: 'author', headerName: 'Autor', flex: 1 },
+    { field: 'availability', headerName: 'Disponibilidad', flex: 1, type: 'number' },
+    {
+      field: 'actions',
+      headerName: 'Acciones',
+      width: 100,
+      sortable: false,
+      renderCell: (params) => (
+        <IconButton
+          onClick={() => navigate(`/book/${params.row.id}`)}
+          color="primary"
+          size="small"
+          title="Ver detalles"
+        >
+          <SearchIcon />
+        </IconButton>
+      ),
+    },
   ];
 
   return (

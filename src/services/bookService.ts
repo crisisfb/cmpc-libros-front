@@ -8,6 +8,11 @@ export const bookService = {
     return response.data;
   },
 
+  async getBook(id: number): Promise<Book> {
+    const response = await axiosInstance.get(`${API_BASE_URL}${API_ENDPOINTS.books}/${id}`);
+    return response.data;
+  },
+
   async createBook(book: CreateBookDTO): Promise<Book> {
     const response = await axiosInstance.post(`${API_BASE_URL}${API_ENDPOINTS.books}`, book);
     return response.data;
