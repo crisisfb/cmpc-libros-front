@@ -64,7 +64,16 @@ const BooksTable = ({
     { field: "title", headerName: "Título", flex: 1, filterable: true },
     { field: "genre", headerName: "Género", flex: 1, filterable: true },
     { field: "publisher", headerName: "Editorial", flex: 1, filterable: true },
-    { field: "author", headerName: "Autor", flex: 1, filterable: true },
+    { 
+      field: "authors", 
+      headerName: "Autor(es)", 
+      flex: 1, 
+      filterable: true,
+      valueGetter: (params) => {
+        console.log(params)
+        return Array.isArray(params) ? params.join(", ") : params;
+      },
+    },
     {
       field: "price",
       type: "number",
