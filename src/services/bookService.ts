@@ -124,4 +124,7 @@ export const bookService = {
       },
     );
   },
+    async deleteBook(id: number): Promise<void> {
+      await axiosInstance.delete(`${API_BASE_URL}${API_ENDPOINTS.books}/${id}`);
+    },
 };

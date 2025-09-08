@@ -24,11 +24,11 @@ axiosInstance.interceptors.request.use(
 
           localStorage.setItem(
             "access_token",
-            refreshResponse.data.accessToken,
+            refreshResponse.data.access_token,
           );
           localStorage.setItem(
             "refresh_token",
-            refreshResponse.data.refreshToken,
+            refreshResponse.data.refresh_token,
           );
           config.headers["Authorization"] =
             `Bearer ${refreshResponse.data.access_token}`;
@@ -70,8 +70,8 @@ axiosInstance.interceptors.response.use(
         );
 
         // Guardar los nuevos tokens
-        localStorage.setItem("access_token", refreshResponse.data.accessToken);
-        localStorage.setItem("refresh_token", refreshResponse.data.refreshToken);
+        localStorage.setItem("access_token", refreshResponse.data.access_token);
+        localStorage.setItem("refresh_token", refreshResponse.data.refresh_token);
 
         // Actualizar el encabezado de autorización y reintentar la solicitud original
         originalRequest.headers["Authorization"] =

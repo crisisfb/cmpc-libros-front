@@ -49,9 +49,13 @@ const CreateBook = () => {
         try {
           const book = await bookService.getBook(parseInt(id));
           setFormData({
-            ...book,
-            price: book.price.toString(),
-            imageUrl: "",
+            title: book.title || "",
+            author: book.author || "",
+            publisher: book.publisher || "",
+            price: book.price ? book.price.toString() : "",
+            availability: book.availability || 0,
+            genre: book.genre || "",
+            imageUrl: book.imageUrl || "",
             image: undefined,
           });
         } catch (error) {

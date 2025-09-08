@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { bookService } from "../services/bookService";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridPaginationModel, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +32,22 @@ const BooksTable = ({
   onFilterChange,
 }: BooksTableProps) => {
   const navigate = useNavigate();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("¿Estás seguro de que deseas borrar este libro?")) {
+      setDeletingId(id);
+      try {
+        await bookService.deleteBook(id);
+        // Opcional: recargar datos o notificar al padre para refrescar
+        window.location.reload(); // Simple recarga, idealmente usar un callback
+      } catch (error) {
+        alert("Error al borrar el libro");
+      } finally {
+        setDeletingId(null);
+      }
+    }
+  };
 
   const handleFilterModelChange = useCallback(
     debounce((model: GridFilterModel) => {
@@ -65,14 +83,10 @@ const BooksTable = ({
     { field: "genre", headerName: "Género", flex: 1, filterable: true },
     { field: "publisher", headerName: "Editorial", flex: 1, filterable: true },
     { 
-      field: "authors", 
+      field: "author", 
       headerName: "Autor(es)", 
       flex: 1, 
       filterable: true,
-      valueGetter: (params) => {
-        console.log(params)
-        return Array.isArray(params) ? params.join(", ") : params;
-      },
     },
     {
       field: "price",
@@ -91,8 +105,8 @@ const BooksTable = ({
     {
       field: "actions",
       headerName: "Acciones",
-      width: 120,
-      sortable: false,  
+      width: 160,
+      sortable: false,
       renderCell: (params) => (
         <Stack direction="row" spacing={1}>
           <IconButton
@@ -110,6 +124,15 @@ const BooksTable = ({
             title="Editar libro"
           >
             <EditIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDelete(params.row.id)}
+            color="error"
+            size="small"
+            title="Borrar libro"
+            disabled={deletingId === params.row.id}
+          >
+            <DeleteIcon />
           </IconButton>
         </Stack>
       ),
