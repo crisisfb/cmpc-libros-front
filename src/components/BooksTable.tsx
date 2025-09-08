@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { bookService } from "../services/bookService";
 import { DataGrid } from "@mui/x-data-grid";
-import type { GridPaginationModel, GridColDef, GridFilterModel } from "@mui/x-data-grid";
+import type { GridPaginationModel, GridColDef, GridFilterModel, GridSortModel } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { debounce } from '@mui/material/utils';
 import SearchIcon from "@mui/icons-material/Search";
@@ -20,6 +20,7 @@ interface BooksTableProps {
   loading: boolean;
   onPaginationChange: (model: GridPaginationModel) => void;
   onFilterChange: (filters: FilterItem[]) => void;
+  onSortChange: (model: GridSortModel) => void;
 }
 
 const BooksTable = ({
@@ -30,6 +31,7 @@ const BooksTable = ({
   loading,
   onPaginationChange,
   onFilterChange,
+  onSortChange,
 }: BooksTableProps) => {
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -77,6 +79,10 @@ const BooksTable = ({
     }, 300),
     [onFilterChange]
   );
+
+  const handleSortModelChange = useCallback((model: GridSortModel) => {
+    onSortChange(model);
+  }, [onSortChange]);
 
   const columns: GridColDef[] = [
     { field: "title", headerName: "Título", flex: 1, filterable: true },
@@ -150,6 +156,8 @@ const BooksTable = ({
         pagination
         paginationMode="server"
         filterMode="server"
+        sortingMode="server"
+        onSortModelChange={handleSortModelChange}
         onFilterModelChange={handleFilterModelChange}
         onPaginationModelChange={onPaginationChange}
         loading={loading}

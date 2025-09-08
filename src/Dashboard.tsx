@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
@@ -7,7 +7,7 @@ import Snackbar from "@mui/material/Snackbar";
 import { bookService } from "./services/bookService";
 import type { Book } from "./types/Book";
 import type { FilterItem } from "./types/Filter";
-import type { GridPaginationModel } from "@mui/x-data-grid";
+import type { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import BooksTable from "./components/BooksTable";
 import Navbar from "./components/Navbar";
 
@@ -20,26 +20,27 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterModel, setFilterModel] = useState<FilterItem[]>([]);
+  const [sortModel, setSortModel] = useState<GridSortModel>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await bookService.getBooks(page, rowsPerPage, filterModel);
-        setBooks(response.rows);
-        setCount(response.count);
-      } catch (error) {
-        console.error("Error fetching books:", error);
-        setError("Error al cargar los libros. Por favor, intente nuevamente.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBooks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await bookService.getBooks(page, rowsPerPage, filterModel, sortModel);
+      setBooks(response.rows);
+      setCount(response.count);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      setError("Error al cargar los libros. Por favor, intente nuevamente.");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, rowsPerPage, filterModel, sortModel]);
 
+  useEffect(() => {
     fetchBooks();
-  }, [page, rowsPerPage, filterModel]);
+  }, [fetchBooks]);
 
 
 
@@ -144,6 +145,7 @@ const Dashboard = () => {
             setRowsPerPage(paginationModel.pageSize);
           }}
           onFilterChange={setFilterModel}
+          onSortChange={setSortModel}
         />
         {error && (
           <Snackbar

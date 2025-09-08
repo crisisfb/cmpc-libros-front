@@ -6,12 +6,14 @@ import type {
   CreateBookDTO,
 } from "../types/Book";
 import type { FilterItem } from "../types/Filter";
+import type { GridSortModel } from "@mui/x-data-grid";
 
 export const bookService = {
   async getBooks(
     page: number,
     limit: number,
-    filters?: FilterItem[]
+    filters?: FilterItem[],
+    sortModel?: GridSortModel
   ): Promise<PaginatedBooksResponse> {
     let url = `${API_BASE_URL}${API_ENDPOINTS.books}?page=${page + 1}&limit=${limit}`;
     
@@ -31,6 +33,12 @@ export const bookService = {
                           filter.operator;
           url += `&${filter.field}[${encodeURIComponent(operator)}]=${encodeURIComponent(filter.value)}`;
         }
+      });
+    }
+
+    if (sortModel && sortModel.length > 0) {
+      sortModel.forEach((sortItem) => {
+        url += `&sort[${sortItem.field}]=${sortItem.sort === 'asc' ? 'ASC' : 'DESC'}`;
       });
     }
     
