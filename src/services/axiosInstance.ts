@@ -1,32 +1,39 @@
-import axios from 'axios';
+import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: "http://localhost:3000",
 });
 
 axiosInstance.interceptors.request.use(
   async (config) => {
-    const token = localStorage.getItem('access_token');
-    const refreshToken = localStorage.getItem('refresh_token');
+    const token = localStorage.getItem("access_token");
+    const refreshToken = localStorage.getItem("refresh_token");
 
     if (token) {
-      const tokenPayload = JSON.parse(atob(token.split('.')[1])); // Decodificar el payload del JWT
+      const tokenPayload = JSON.parse(atob(token.split(".")[1])); // Decodificar el payload del JWT
       const isTokenExpired = tokenPayload.exp * 1000 < Date.now(); // Verificar si el token expiró
 
       if (isTokenExpired && refreshToken) {
         try {
-          const refreshResponse = await axios.post('http://localhost:3000/auth/refresh', {
-            refreshToken,
-          });
+          const refreshResponse = await axios.post(
+            "http://localhost:3000/auth/refresh",
+            {
+              refreshToken,
+            },
+          );
 
-          localStorage.setItem('access_token', refreshResponse.data.access_token);
-          config.headers['Authorization'] = `Bearer ${refreshResponse.data.access_token}`;
+          localStorage.setItem(
+            "access_token",
+            refreshResponse.data.access_token,
+          );
+          config.headers["Authorization"] =
+            `Bearer ${refreshResponse.data.access_token}`;
         } catch (error) {
-          console.error('Error al refrescar el token:', error);
-          window.location.href = '/login'; // Redirigir al login si el refresh falla
+          console.error("Error al refrescar el token:", error);
+          window.location.href = "/login"; // Redirigir al login si el refresh falla
         }
       } else {
-        config.headers['Authorization'] = `Bearer ${token}`;
+        config.headers["Authorization"] = `Bearer ${token}`;
       }
     }
 
@@ -34,7 +41,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosInstance.interceptors.response.use(
@@ -51,26 +58,30 @@ axiosInstance.interceptors.response.use(
 
       try {
         // Intentar refrescar el token
-        const refreshResponse = await axios.post('http://localhost:3000/auth/refresh', {
-          token: localStorage.getItem('refresh_token'),
-        });
+        const refreshResponse = await axios.post(
+          "http://localhost:3000/auth/refresh",
+          {
+            token: localStorage.getItem("refresh_token"),
+          },
+        );
 
         // Guardar el nuevo token de acceso
-        localStorage.setItem('access_token', refreshResponse.data.access_token);
+        localStorage.setItem("access_token", refreshResponse.data.access_token);
 
         // Actualizar el encabezado de autorización y reintentar la solicitud original
-        originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.access_token}`;
+        originalRequest.headers["Authorization"] =
+          `Bearer ${refreshResponse.data.access_token}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        console.error('Error al refrescar el token:', refreshError);
+        console.error("Error al refrescar el token:", refreshError);
         // Redirigir al usuario al login si el refresh falla
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     }
 
     // Si no es un error 401 o el refresh falla, rechazar la promesa
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

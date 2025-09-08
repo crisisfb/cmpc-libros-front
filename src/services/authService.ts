@@ -1,18 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
 export const loginService = async (email: string, password: string) => {
   try {
-    const response = await axios.post('http://localhost:3000/auth/login', {
+    const response = await axios.post("http://localhost:3000/auth/login", {
       email,
       password,
     });
 
-    localStorage.setItem('access_token', response.data.access_token); // Guardar el token en localStorage
+    localStorage.setItem("access_token", response.data.access_token); // Guardar el token en localStorage
     if (response.data.refresh_token) {
-      localStorage.setItem('refresh_token', response.data.refresh_token); // Guardar el refresh token si está disponible
+      localStorage.setItem("refresh_token", response.data.refresh_token); // Guardar el refresh token si está disponible
     }
     return response.data;
   } catch {
-    throw new Error('Invalid email or password');
+    throw new Error("Invalid email or password");
   }
 };

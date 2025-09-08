@@ -3,9 +3,13 @@ export interface Book {
   title: string;
   author: string;
   publisher: string;
-  price: number;
+  price: string | number;
   availability: number;
   genre: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface CreateBookDTO {
@@ -15,9 +19,11 @@ export interface CreateBookDTO {
   price: number;
   availability: number;
   genre: string;
+  imageUrl?: string;
+  image?: File;
 }
 
-export interface BookResponse {
-  rows: Book[];
+export interface PaginatedBooksResponse {
   count: number;
+  rows: Book[];
 }

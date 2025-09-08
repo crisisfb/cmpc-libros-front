@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import './Login.css';
-import { loginService } from './services/authService';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import "./Login.css";
+import { loginService } from "./services/authService";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
       const data = await loginService(email, password);
-      console.log('Login successful:', data);
-      navigate('/dashboard'); // Redirigir al usuario al dashboard
+      console.log("Login successful:", data);
+      navigate("/dashboard"); // Redirigir al usuario al dashboard
     } catch {
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     }
   };
 
@@ -49,7 +49,9 @@ const Login = () => {
               required
             />
           </div>
-          <button type="submit" className="button">Login</button>
+          <button type="submit" className="button">
+            Login
+          </button>
         </form>
       </div>
     </div>
