@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridPaginationModel, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
+import { debounce } from '@mui/material/utils';
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
 import SearchIcon from "@mui/icons-material/Search";
@@ -12,7 +13,7 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { bookService } from "./services/bookService";
 import type { Book } from "./types/Book";
-import type { FilterItem } from "./types/Filter";
+import type { FilterItem, TextFilterOperator, NumberFilterOperator } from "./types/Filter";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +25,38 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterModel, setFilterModel] = useState<FilterItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFilterModelChange = useCallback(
+    debounce((model: GridFilterModel) => {
+      const newFilters: FilterItem[] = model.items?.map(item => {
+        const operator = item.operator as TextFilterOperator | NumberFilterOperator;
+        // Para campos vacíos o no vacíos, el valor puede ser null
+        if (operator === 'isEmpty' || operator === 'isNotEmpty') {
+          return {
+            field: item.field,
+            operator,
+            value: null
+          };
+        }
+        // Para isAnyOf, el valor es un array
+        if (operator === 'isAnyOf' && Array.isArray(item.value)) {
+          return {
+            field: item.field,
+            operator,
+            value: item.value
+          };
+        }
+        // Para el resto de operadores
+        return {
+          field: item.field,
+          operator,
+          value: item.value || ''
+        };
+      }) || [];
+      setFilterModel(newFilters);
+    }, 300),
+    []
+  );
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -191,34 +224,7 @@ const Dashboard = () => {
             pagination
             paginationMode="server"
             filterMode="server"
-            onFilterModelChange={(model: GridFilterModel) => {
-              const newFilters: FilterItem[] = model.items?.map(item => {
-                const operator = item.operator as TextFilterOperator | NumberFilterOperator;
-                // Para campos vacíos o no vacíos, el valor puede ser null
-                if (operator === 'isEmpty' || operator === 'isNotEmpty') {
-                  return {
-                    field: item.field,
-                    operator,
-                    value: null
-                  };
-                }
-                // Para isAnyOf, el valor es un array
-                if (operator === 'isAnyOf' && Array.isArray(item.value)) {
-                  return {
-                    field: item.field,
-                    operator,
-                    value: item.value
-                  };
-                }
-                // Para el resto de operadores
-                return {
-                  field: item.field,
-                  operator,
-                  value: item.value || ''
-                };
-              }) || [];
-              setFilterModel(newFilters);
-            }}
+            onFilterModelChange={handleFilterModelChange}
             onPaginationModelChange={(paginationModel: GridPaginationModel) => {
               setPage(paginationModel.page);
               setRowsPerPage(paginationModel.pageSize);
