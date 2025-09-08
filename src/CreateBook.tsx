@@ -1,7 +1,24 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { bookService } from "./services/bookService";
-import "./App.css";
+import {
+  Container,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Snackbar,
+  IconButton,
+  Grid,
+  InputAdornment,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const CreateBook = () => {
   const navigate = useNavigate();
@@ -20,6 +37,11 @@ const CreateBook = () => {
   });
 
   const [imageInputType, setImageInputType] = useState<"url" | "file">("url");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error"
+  });
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -44,12 +66,15 @@ const CreateBook = () => {
   }, [id, isEditMode, navigate]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.ChangeEvent<{ name?: string; value: unknown }>,
   ) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+    const target = e.target as HTMLInputElement;
+    const name = target.name;
+    const value = target.value;
+    const type = target.type;
 
     if (type === "file" && name === "image") {
-      const files = (e.target as HTMLInputElement).files;
+      const files = target.files;
       if (files && files.length > 0) {
         setFormData({
           ...formData,
@@ -58,11 +83,11 @@ const CreateBook = () => {
         });
       }
     } else {
-      const parsedValue = name === "availability" ? parseInt(value, 10) : value;
+      const parsedValue = name === "availability" ? parseInt(value as string, 10) : value;
       setFormData({
         ...formData,
         [name]: parsedValue,
-        ...(name === "imageUrl" && { imageFile: undefined }), // Clear file when URL is entered
+        ...(name === "imageUrl" && { image: undefined }), // Clear file when URL is entered
       });
     }
   };
@@ -77,10 +102,18 @@ const CreateBook = () => {
 
       if (isEditMode) {
         await bookService.updateBook(parseInt(id), bookData);
-        alert("Libro actualizado exitosamente");
+        setSnackbar({
+          open: true,
+          message: "Libro actualizado exitosamente",
+          severity: "success"
+        });
       } else {
         await bookService.createBook(bookData);
-        alert("Libro creado exitosamente");
+        setSnackbar({
+          open: true,
+          message: "Libro creado exitosamente",
+          severity: "success"
+        });
         setFormData({
           title: "",
           author: "",
@@ -101,223 +134,168 @@ const CreateBook = () => {
   };
 
   return (
-    <div
-      className="create-book"
-      style={{
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "20px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      <h2 style={{ textAlign: "center", color: "#333" }}>
-        {isEditMode ? "Editar Libro" : "Crear Libro"}
-      </h2>
-      <button
-        onClick={() => navigate("/dashboard")}
-        style={{
-          marginBottom: "15px",
-          padding: "10px",
-          backgroundColor: "#6c757d",
-          color: "#fff",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
-        Volver al Dashboard
-      </button>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-      >
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Título:
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Autor:
-          <input
-            type="text"
-            name="author"
-            value={formData.author}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Editorial:
-          <input
-            type="text"
-            name="publisher"
-            value={formData.publisher}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Precio:
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Disponibilidad:
-          <input
-            type="number"
-            name="availability"
-            value={formData.availability}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <label
-          style={{ display: "flex", flexDirection: "column", color: "#555" }}
-        >
-          Género:
-          <input
-            type="text"
-            name="genre"
-            value={formData.genre}
-            onChange={handleChange}
-            required
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-
-        <div style={{ marginBottom: "15px" }}>
-          <label
-            style={{ display: "block", marginBottom: "10px", color: "#555" }}
+    <Container maxWidth="md">
+      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+          <IconButton
+            onClick={() => navigate("/dashboard")}
+            sx={{ mr: 2 }}
+            aria-label="volver"
           >
-            Tipo de imagen:
-            <select
-              value={imageInputType}
-              onChange={(e) => {
-                setImageInputType(e.target.value as "url" | "file");
-                setFormData({
-                  ...formData,
-                  imageUrl: "",
-                });
-              }}
-              style={{ marginLeft: "10px", padding: "5px" }}
-            >
-              <option value="url">URL de imagen</option>
-              <option value="file">Subir archivo</option>
-            </select>
-          </label>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h5" component="h1">
+            {isEditMode ? "Editar Libro" : "Crear Libro"}
+          </Typography>
+        </Box>
 
-          {imageInputType === "url" ? (
-            <label
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                color: "#555",
-              }}
-            >
-              URL de la imagen:
-              <input
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl}
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Título"
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
-                placeholder="https://ejemplo.com/imagen.jpg"
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Autor"
+                name="author"
+                value={formData.author}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Editorial"
+                name="publisher"
+                value={formData.publisher}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                type="number"
+                label="Precio"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ),
                 }}
               />
-            </label>
-          ) : (
-            <label
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                color: "#555",
-              }}
-            >
-              Archivo de imagen:
-              <input
-                type="file"
-                name="image"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                type="number"
+                label="Disponibilidad"
+                name="availability"
+                value={formData.availability}
                 onChange={handleChange}
-                accept="image/*"
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                }}
               />
-            </label>
-          )}
-        </div>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Género"
+                name="genre"
+                value={formData.genre}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel id="image-type-label">Tipo de imagen</InputLabel>
+                <Select
+                  labelId="image-type-label"
+                  value={imageInputType}
+                  label="Tipo de imagen"
+                  onChange={(e) => {
+                    setImageInputType(e.target.value as "url" | "file");
+                    setFormData({
+                      ...formData,
+                      imageUrl: "",
+                      image: undefined,
+                    });
+                  }}
+                >
+                  <MenuItem value="url">URL de imagen</MenuItem>
+                  <MenuItem value="file">Subir archivo</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              {imageInputType === "url" ? (
+                <TextField
+                  fullWidth
+                  label="URL de la imagen"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+              ) : (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  sx={{ height: "56px" }}
+                >
+                  {formData.image ? formData.image.name : "Seleccionar archivo"}
+                  <input
+                    type="file"
+                    name="image"
+                    onChange={handleChange}
+                    accept="image/*"
+                    hidden
+                  />
+                </Button>
+              )}
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+              >
+                {isEditMode ? "Actualizar Libro" : "Crear Libro"}
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
 
-        <button
-          type="submit"
-          style={{
-            padding: "10px",
-            backgroundColor: "#007BFF",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          elevation={6}
+          variant="filled"
         >
-          {isEditMode ? "Actualizar Libro" : "Crear Libro"}
-        </button>
-      </form>
-    </div>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 

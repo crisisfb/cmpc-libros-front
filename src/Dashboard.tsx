@@ -1,19 +1,15 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { DataGrid } from "@mui/x-data-grid";
-import type { GridPaginationModel, GridColDef, GridFilterModel } from "@mui/x-data-grid";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { debounce } from '@mui/material/utils';
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
-import SearchIcon from "@mui/icons-material/Search";
-import EditIcon from "@mui/icons-material/Edit";
-import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { bookService } from "./services/bookService";
 import type { Book } from "./types/Book";
-import type { FilterItem, TextFilterOperator, NumberFilterOperator } from "./types/Filter";
+import type { FilterItem } from "./types/Filter";
+import type { GridPaginationModel } from "@mui/x-data-grid";
+import BooksTable from "./components/BooksTable";
+import Navbar from "./components/Navbar";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -25,38 +21,6 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterModel, setFilterModel] = useState<FilterItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFilterModelChange = useCallback(
-    debounce((model: GridFilterModel) => {
-      const newFilters: FilterItem[] = model.items?.map(item => {
-        const operator = item.operator as TextFilterOperator | NumberFilterOperator;
-        // Para campos vacíos o no vacíos, el valor puede ser null
-        if (operator === 'isEmpty' || operator === 'isNotEmpty') {
-          return {
-            field: item.field,
-            operator,
-            value: null
-          };
-        }
-        // Para isAnyOf, el valor es un array
-        if (operator === 'isAnyOf' && Array.isArray(item.value)) {
-          return {
-            field: item.field,
-            operator,
-            value: item.value
-          };
-        }
-        // Para el resto de operadores
-        return {
-          field: item.field,
-          operator,
-          value: item.value || ''
-        };
-      }) || [];
-      setFilterModel(newFilters);
-    }, 300),
-    []
-  );
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -77,57 +41,12 @@ const Dashboard = () => {
     fetchBooks();
   }, [page, rowsPerPage, filterModel]);
 
-  const columns: GridColDef[] = [
-    { field: "title", headerName: "Título", flex: 1, filterable: true },
-    { field: "genre", headerName: "Género", flex: 1, filterable: true },
-    { field: "publisher", headerName: "Editorial", flex: 1, filterable: true },
-    { field: "author", headerName: "Autor", flex: 1, filterable: true },
-    {
-      field: "price",
-      type: "number",
-      headerName: "Precio",
-      flex: 1,
-      filterable: true,
-    },
-    {
-      field: "availability",
-      headerName: "Disponibilidad",
-      flex: 1,
-      type: "number",
-      filterable: true,
-    },
-    {
-      field: "actions",
-      headerName: "Acciones",
-      width: 120,
-      sortable: false,  
-      renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <IconButton
-            onClick={() => navigate(`/book/${params.row.id}`)}
-            color="primary"
-            size="small"
-            title="Ver detalles"
-          >
-            <SearchIcon />
-          </IconButton>
-          <IconButton
-            onClick={() => navigate(`/edit-book/${params.row.id}`)}
-            color="primary"
-            size="small"
-            title="Editar libro"
-          >
-            <EditIcon />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
+
 
   return (
     <ThemeProvider theme={createTheme()}>
+      <Navbar />
       <div style={{ padding: "20px" }}>
-        <h1>Dashboard</h1>
         <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
           <button
             onClick={() => navigate("/create-book")}
@@ -214,25 +133,18 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div style={{ height: 400, width: "100%" }}>
-          <DataGrid
-            rows={books}
-            columns={columns}
-            pageSizeOptions={[5, 10, 25, 50]}
-            paginationModel={{ page, pageSize: rowsPerPage }}
-            rowCount={count}
-            pagination
-            paginationMode="server"
-            filterMode="server"
-            onFilterModelChange={handleFilterModelChange}
-            onPaginationModelChange={(paginationModel: GridPaginationModel) => {
-              setPage(paginationModel.page);
-              setRowsPerPage(paginationModel.pageSize);
-            }}
-            loading={loading}
-            disableRowSelectionOnClick
-          />
-        </div>
+        <BooksTable
+          books={books}
+          count={count}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          loading={loading}
+          onPaginationChange={(paginationModel: GridPaginationModel) => {
+            setPage(paginationModel.page);
+            setRowsPerPage(paginationModel.pageSize);
+          }}
+          onFilterChange={setFilterModel}
+        />
         {error && (
           <Snackbar
             open={!!error}
