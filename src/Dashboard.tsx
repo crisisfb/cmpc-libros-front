@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import type { GridPaginationModel, GridColDef } from "@mui/x-data-grid";
+import type { GridPaginationModel, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
@@ -12,6 +12,7 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { bookService } from "./services/bookService";
 import type { Book } from "./types/Book";
+import type { FilterItem } from "./types/Filter";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filterModel, setFilterModel] = useState<FilterItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await bookService.getBooks(page, rowsPerPage);
+        const response = await bookService.getBooks(page, rowsPerPage, filterModel);
         setBooks(response.rows);
         setCount(response.count);
       } catch (error) {
@@ -40,31 +42,26 @@ const Dashboard = () => {
     };
 
     fetchBooks();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, filterModel]);
 
   const columns: GridColDef[] = [
-    { field: "title", headerName: "Título", flex: 1 },
-    { field: "genre", headerName: "Género", flex: 1 },
-    { field: "publisher", headerName: "Editorial", flex: 1 },
-    { field: "author", headerName: "Autor", flex: 1 },
+    { field: "title", headerName: "Título", flex: 1, filterable: true },
+    { field: "genre", headerName: "Género", flex: 1, filterable: true },
+    { field: "publisher", headerName: "Editorial", flex: 1, filterable: true },
+    { field: "author", headerName: "Autor", flex: 1, filterable: true },
     {
       field: "price",
+      type: "number",
       headerName: "Precio",
       flex: 1,
-      type: "number",
-      valueFormatter: (params: { value: string | number | null }) => {
-        if (params.value == null) {
-          return '';
-        }
-        const numericValue = typeof params.value === 'string' ? parseFloat(params.value) : params.value;
-        return `$${numericValue.toLocaleString('es-CL')}`;
-      },
+      filterable: true,
     },
     {
       field: "availability",
       headerName: "Disponibilidad",
       flex: 1,
       type: "number",
+      filterable: true,
     },
     {
       field: "actions",
@@ -193,12 +190,40 @@ const Dashboard = () => {
             rowCount={count}
             pagination
             paginationMode="server"
+            filterMode="server"
+            onFilterModelChange={(model: GridFilterModel) => {
+              const newFilters: FilterItem[] = model.items?.map(item => {
+                const operator = item.operator as TextFilterOperator | NumberFilterOperator;
+                // Para campos vacíos o no vacíos, el valor puede ser null
+                if (operator === 'isEmpty' || operator === 'isNotEmpty') {
+                  return {
+                    field: item.field,
+                    operator,
+                    value: null
+                  };
+                }
+                // Para isAnyOf, el valor es un array
+                if (operator === 'isAnyOf' && Array.isArray(item.value)) {
+                  return {
+                    field: item.field,
+                    operator,
+                    value: item.value
+                  };
+                }
+                // Para el resto de operadores
+                return {
+                  field: item.field,
+                  operator,
+                  value: item.value || ''
+                };
+              }) || [];
+              setFilterModel(newFilters);
+            }}
             onPaginationModelChange={(paginationModel: GridPaginationModel) => {
               setPage(paginationModel.page);
               setRowsPerPage(paginationModel.pageSize);
             }}
             loading={loading}
-            autoHeight
             disableRowSelectionOnClick
           />
         </div>

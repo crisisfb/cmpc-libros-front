@@ -5,12 +5,36 @@ import type {
   PaginatedBooksResponse,
   CreateBookDTO,
 } from "../types/Book";
+import type { FilterItem } from "../types/Filter";
 
 export const bookService = {
-  async getBooks(page: number, limit: number): Promise<PaginatedBooksResponse> {
-    const response = await axiosInstance.get(
-      `${API_BASE_URL}${API_ENDPOINTS.books}?page=${page + 1}&limit=${limit}`,
-    );
+  async getBooks(
+    page: number,
+    limit: number,
+    filters?: FilterItem[]
+  ): Promise<PaginatedBooksResponse> {
+    let url = `${API_BASE_URL}${API_ENDPOINTS.books}?page=${page + 1}&limit=${limit}`;
+    
+    if (filters && filters.length > 0) {
+      filters.forEach((filter) => {
+        if (filter.operator === 'isEmpty') {
+          url += `&${filter.field}[isEmpty]=true`;
+        } else if (filter.operator === 'isNotEmpty') {
+          url += `&${filter.field}[isNotEmpty]=true`;
+        } else if (filter.operator === 'isAnyOf' && Array.isArray(filter.value)) {
+          filter.value.forEach((val) => {
+            url += `&${filter.field}[in][]=${encodeURIComponent(val)}`;
+          });
+        } else if (filter.value !== undefined && filter.value !== null && filter.value !== '') {
+          const operator = filter.operator === 'doesNotContain' ? 'notContains' :
+                          filter.operator === 'doesNotEqual' ? 'notEquals' :
+                          filter.operator;
+          url += `&${filter.field}[${encodeURIComponent(operator)}]=${encodeURIComponent(filter.value)}`;
+        }
+      });
+    }
+    
+    const response = await axiosInstance.get(url);
     return response.data;
   },
 
