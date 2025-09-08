@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridPaginationModel, GridColDef } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -125,7 +126,7 @@ const Dashboard = () => {
                 document.body.removeChild(a);
               } catch (error) {
                 console.error("Error exporting CSV:", error);
-                alert("Error al exportar los datos");
+                setError("Error al exportar los datos");
               }
             }}
             style={{
@@ -138,6 +139,48 @@ const Dashboard = () => {
             }}
           >
             Exportar CSV
+          </button>
+          <input
+            type="file"
+            accept=".csv"
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              
+              setLoading(true);
+              try {
+                await bookService.importCsv(file);
+                // Refresh the books list after import
+                const response = await bookService.getBooks(page, rowsPerPage);
+                setBooks(response.rows);
+                setCount(response.count);
+                setError(null);
+              } catch (error) {
+                console.error("Error importing CSV:", error);
+                setError("Error al importar el archivo CSV");
+              } finally {
+                setLoading(false);
+                // Reset the file input
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }
+            }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              padding: "10px",
+              backgroundColor: "#6c757d",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Importar CSV
           </button>
         </div>
 

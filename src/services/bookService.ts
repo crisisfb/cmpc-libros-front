@@ -86,4 +86,18 @@ export const bookService = {
     );
     return response.data;
   },
+
+  async importCsv(file: File): Promise<void> {
+    const formData = new FormData();
+    formData.append("file", file);
+    await axiosInstance.post(
+      `${API_BASE_URL}${API_ENDPOINTS.books}/import/csv`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  },
 };
